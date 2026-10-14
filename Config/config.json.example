@@ -1,0 +1,193 @@
+{
+  "helius": {
+    "api_key": "PASTE_YOUR_HELIUS_API_KEY_HERE",
+    "network": "mainnet-beta",
+    "rpc_url": "https://mainnet.helius-rpc.com",
+    "api_base_url": "https://api.helius.xyz"
+  },
+  "scanner": {
+    "request_timeout_ms": 12000,
+    "max_retries": 3,
+    "retry_delay_ms": 1000,
+    "max_retry_delay_ms": 10000,
+    "retry_jitter_ms": 250,
+    "holder_max_unique": 5000
+  },
+  "rpc_throttle": {
+    "min_interval_ms": 110,
+    "max_delay_ms": 30000,
+    "retryable_statuses": [408, 429, 500, 502, 503, 504]
+  },
+  "scoring": {
+    "components": {
+      "database_wallet_intelligence": 25,
+      "holder_structure": 15,
+      "token_authority_supply": 15,
+      "liquidity_lp": 15,
+      "creator_dev_activity": 10,
+      "onchain_activity_momentum": 10,
+      "risk_signals": 10
+    },
+    "wallet_weights": {
+      "default": 1,
+      "early": 2,
+      "whale": 3,
+      "dev": -1,
+      "rug_kol": -2
+    },
+    "modifiers": {
+      "star": 5,
+      "priority": 2,
+      "flag": -5,
+      "blocked": -10
+    },
+    "classification": {
+      "very_weak_evidence": {
+        "min": 0,
+        "max": 20
+      },
+      "weak_evidence": {
+        "min": 21,
+        "max": 40
+      },
+      "moderate_evidence": {
+        "min": 41,
+        "max": 60
+      },
+      "strong_evidence": {
+        "min": 61,
+        "max": 80
+      },
+      "very_strong_evidence": {
+        "min": 81,
+        "max": 100
+      }
+    }
+  },
+  "creator_dev": {
+    "max_direct_recipients": 5,
+    "creator_history_max_pages": 2,
+    "related_wallet_history_max_pages": 5,
+    "max_initial_distribution_clusters": 50,
+    "creator_max_transaction_samples": 100,
+    "related_wallet_enabled": true,
+    "related_wallet_max": 200,
+    "related_wallet_max_transaction_samples": 50,
+    "initial_distribution_enabled": true,
+    "initial_distribution_max_pages": 10,
+    "max_wallets_per_cluster": 100,
+    "initial_distribution_time_window_seconds": 300,
+    "funding_enabled": false,
+    "funding_max_depth": 0,
+    "funding_max_wallets": 0,
+    "creator_transfer_max_pages": 10,
+    "related_transfer_max_pages": 5
+  },
+  "fee_economics": {
+    "max_pools_to_analyze": 5,
+    "transaction_sample_size": 30,
+    "downstream_transaction_sample_size": 8,
+    "max_fee_destinations_to_trace": 12,
+    "trace_protocol_recipients": true,
+    "trace_creator_fee": true,
+    "sampling_mode": "HYBRID",
+    "pool_history_multiplier": 5,
+    "downstream_history_multiplier": 8
+  },
+  "database_wallet_matching": {
+    "history_enabled": true,
+    "history_max_pages": 3,
+    "history_concurrency": 2,
+    "max_history_events_per_wallet": 100,
+    "position_score_enabled": true,
+    "hold_profile_thresholds_minutes": [
+      15,
+      60,
+      360,
+      1440
+    ],
+    "max_retries": 2,
+    "retry_delay_ms": 2000,
+    "max_retry_delay_ms": 15000,
+    "retry_jitter_ms": 500,
+    "request_timeout_ms": 12000,
+    "rate_limit_retry_delay_ms": 5000,
+    "scheduler": "FIXED_BOUNDED_QUEUE_THEN_429_RETRY_PASS",
+    "adaptive_concurrency": false,
+    "retry_429_during_main_scan": false,
+    "retry_429_after_main_scan": true,
+    "retry_429_attempts_after_main_scan": 1,
+    "retry_pass_concurrency": 2,
+    "retry_429_pass_delay_ms": 5000,
+    "global_request_pacing": false
+  },
+  "phase8": {
+    "enabled": true,
+    "max_wallets": 100,
+    "top_holder_count": 25,
+    "high_priority_max_pages": 10,
+    "medium_priority_max_pages": 5,
+    "low_priority_max_pages": 3,
+    "max_events_per_wallet": 500,
+    "concurrency": 3,
+    "request_timeout_ms": 15000,
+    "retry_5xx_attempts": 2,
+    "retry_429_pass_delay_ms": 5000,
+    "timezone": "Asia/Jakarta",
+    "min_request_interval_ms": 180
+  },
+  "early_signals": {
+    "early_window_minutes": 60,
+    "top10_warn_pct": 35,
+    "top10_fail_pct": 55,
+    "creator_warn_pct": 10,
+    "creator_fail_pct": 25
+  },
+  "funding_graph": {
+    "pre_acquisition_txs": 5,
+    "max_wallets": 100,
+    "min_request_interval_ms": 180
+  },
+  "market_volume": {
+    "max_tx": 1500,
+    "delay_ms": 300,
+    "page_limit": 1000,
+    "retry_passes": 2,
+    "retry_delay_ms": 1500,
+    "timeout_ms": 25000,
+    "concurrency": 3
+  },
+  "database_conviction": {
+    "min_matched_wallets": 3,
+    "db_total_wallets": 1143,
+    "sell_cluster_window_seconds": 3600,
+    "fast_exit_hours": 72,
+    "conviction_scale": 50,
+    "adjustment_clamp": [
+      -15,
+      15
+    ],
+    "holder_distribution": {
+      "retention_weight": 10,
+      "conviction_weight": 5
+    },
+    "risk_findings": {
+      "coordinated_sell_weight": 12,
+      "fast_exit_weight": 8,
+      "negative_conviction_weight": 10
+    },
+    "creator_activity": {
+      "bundler_overlap_weight": 10
+    },
+    "token_control": {
+      "dev_concentration_weight": 8
+    }
+  },
+  "relationships": {
+    "enabled": true,
+    "note": "Jalur data CTR-05: anotasi relationship dari funding-graph.json (shared funder). false = matikan anotasi."
+  },
+  "evaluation_guards": {
+    "liquidity_credibility_ratio": 0.01
+  }
+}

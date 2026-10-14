@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "description": "Explicit Solana CEX and labeled service-address registry used by Phase 3.",
+    "policy": "An address is tagged only when explicitly listed here; transaction-shape inference is not used.",
+    "source": "user_provided_manual_registry",
+    "verification_status": "user_provided_not_independently_verified",
+    "last_updated": "2026-08-29"
+  },
+  "Binance": {
+    "addresses": [
+      "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
+      "2ojv9BAiHUrvsm9gxDe7fJSzbNZSJcxZvf8dqmWGHG8S",
+      "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+      "3gd3dqgtJ4jWfBfLYTX67DALFetjc5iS72sCgRhCkW2u",
+      "3yFwqXBfZY4jBVUafQ1YEXw189y2dN3V5KQq9uzBDy1E",
+      "6QJzieMYfp7yr3EdrePaQoG3Ghxs2wM98xSLRu8Xh56U",
+      "Cu6dspTP8HAkJafXRxfqebwc4qVd1HeYRoysLNySKPnN",
+      "5kA9TYSKo8EdrUmsUwvNbjC9L8ee7U7oiG6VRp3Mvyaw",
+      "DQcXx11WaW9BcJGz9nwnzLUhW5AsAuHBdyosM2q1AyQZ",
+      "8otEw3JqK1x2dgo9xA9iXJvjLktZxBpbZT5AANUaUqx1",
+      "EtnjGMwQBjSnnNJQ2F2LT43vy9vwStdTm5MCQe4iTKfb",
+      "CcWzztCgotB2WXrK93Zt9gDtuDDpXQNWtsQuhjymoM69",
+      "GP1FetSW3iy6vUN3DUCatM8ULNHceN9J9HnZEpaQnsim",
+      "3hsRqZ3fYB192Wo7CiRDNYG3zsMXxR3KB3AJ1RqZfZUH",
+      "3CrojpeGLSAxLv65ea6jA1ejcDphiHijFjy6nviqrPnq",
+      "BYkNnJhmkzi1v3esqS6J4vwSAYQ78o9U2SsRmSVRu1cT",
+      "2Vvn3vJoPquaRLUGZyHW1hgLCqAefFEYhYGkhHNDHz8g",
+      "8qruuNy6kNbXNRQFz88mgETBuYy2fT5VgzTVkxYsJkMk",
+      "6K3HSLLm3eP7DHCapa2ToQwZws4MncpuLhoCufWzctyW",
+      "BgtUWD2qcNvc46tjKsgA7Jb7kMfebQth5hidtNCxESvp",
+      "6NAyup7WWRjnP1hNeA7xrXXDYDYvw1vcTDGw2XfqPoMo",
+      "8kXdJ9nNaCuN3Z672p1p6bTgQpC19EHguPHxn6p3qWmt"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "MEXC": {
+    "addresses": [
+      "ASTyfSima4LLAdDgoFGkgqoKowG1LZFDr9fAQrg7iaJZ",
+      "5PAhQiYdLBd6SVdjzBQDxUAEFyDdF5ExNPQfcscnPRj5"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Gate.io": {
+    "addresses": [
+      "HiRpdAZifEsZGdzQ5Xo5wcnaH3D2Jj9SoNsUzcYNK78J",
+      "u6PJ8DtQuPFnfmwHbGFULQ4u4EgjDiyYKjVEsynXq2w"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Bybit": {
+    "addresses": [
+      "6TgAsoF4x3b7q6T8cWKK5nxHjKu7PFYadSUuGMYhSmjv",
+      "5GgNtftkzBFEKqLjLQe5c6vJkGzNkCccAtvaLVo6TeLs",
+      "CVQ6Z1xapCo5s6HD9dMZefgs2573RZB9sJzLUxNKHxA9",
+      "CeF4AJt7FetuM6bB7TsoLwmvKviBdMVHELgH3oZTeEhH",
+      "2YgA44ghNDvWw3U4UgpXURoHKVmVkyw2oQUgvG7JcpT7",
+      "Ebwa2Ta7jo7UGZdq1aSibnuSqPRbwHG5NX5pNiXkCx3x",
+      "6x8xh26xWPSPsTa34zmAxPMg5mN2pJpoLq7eUh9XGN4F",
+      "BrkRUXdAJRAHdqbwvu9w269tiRuAK27Vvm2md3RResj",
+      "56J1ZCGCzQLcKSEspiXF4gppuML78qSPGRkp1hQ4V5mt",
+      "4K4ELf7oZpjmi9rTwmbwrvx8C5M6VhDi9DnFaF2pnT58",
+      "9xMZ5hf5mFfJ8LHyMysmziC1UGRYgUP2BQqpRwPPr74y",
+      "Hw218Rt5HzyXjRjnV7hVsNQT6gswZ96DpcsmhLV68qWd",
+      "HnyMqjXYcESZBDwXbFrndT3Bg8u449DMJMqqhz9qhsHF",
+      "5fAZxdHWgwfJAwdREJt8TBGTk3W5vHknsScURNxjf3sT",
+      "CTcFE2aHCmvTNsvE5bzmecFJPybRDzrvAURidJ4gC4w8",
+      "F6Woyyf35mJsDPSki7e3aV9ah6MeZJa6DvhakjpYdkea",
+      "96S7iLAT6MHonhY1RANa5rCgB45CDYWn8J85nMEXg92F",
+      "AFwaqvr4wqS7VJ4PvFLsTBmuyvvEazJ6LdEykKC33xVe",
+      "6YGLYoTSVqmNVokU2BWWCkTiNMrCpzW9so74SNAoCfaN",
+      "cY465MuSRaJZrJ1NxScfbtmXVgt4pVFThYpgSCZ5E63",
+      "Hvkm4H2Ta3L3ssWbB5jeC4kpEJDuZnZqapAXp1V7UHEw",
+      "i9XvhQqBCTQapqaFKPDuCbtPYMCwELmX8VTCsDhRG7d",
+      "CK8i4zFXkDE2KWfyg7g9S748r6mwxajbcKcyGhQMR3qQ",
+      "2qo8jvuc49pFmTjmUHLiARSV6ppPTaE7gw27ZJ6DnNZy",
+      "5LZkATrLwHYCQj2YuVbjjgsDZzBk6YfL4pFQRJmtboT2",
+      "7ReR6syi6gr7qUrKCL1FB9VFzGhVgHwLJ8wtfNtH9Mv4",
+      "9ZifroknFoYu4r6DUk6nYoJiUQnEyyoUyeAwjXbPoL2x",
+      "iGdFcQoyR2MwbXMHQskhmNsqddZ6rinsipHc4TNSdwu",
+      "32cT9eAwkEvAk631rUcUAbXVFPg21DaAXzGiz9AqHTVE",
+      "CqQ6AX1fiFfHKKY3saGzT5pgbkLwfLVrrAKpFhUG38oe",
+      "9Z7S8vCj6nDbK9t4m4AU3vZpKm4UufHAwpmRYyKgZf7r",
+      "FeNayVKekV9FJzhD7ycTd6sbKEyzt9CRCiqxw5nr41yR",
+      "42brAgAVNzMBP7aaktPvAmBSPEkehnFQejiZc53EpJFd",
+      "AC5RDfQFmDS1deWZos921JfqscXdByf8BKHs5ACWjtW2"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Coinbase": {
+    "addresses": [
+      "59L2oxymiQQ9Hvhh92nt8Y7nDYjsauFkdb3SybdnsG6h",
+      "GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE",
+      "D89hHJT5Aqyx1trP6EnGY9jJUB3whgnq3aUvvCqedvzf",
+      "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo",
+      "H8sMJSCQxfKiFTCfDR3DUMLPwcRbM61LGFJ8N4dK3WjS",
+      "FpwQQhQQoEaVu3WU2qZMfF1hx48YyfwsLoRgXG83E99Q",
+      "9obNtb5GyUegcs3a1CbBkLuc5hEWynWfJC6gjz5uWQkE",
+      "2AQdpHJ2JpcEgPiATUXjQxA8QmafFegfQwSLWSprPicm",
+      "3vxheE5C46XzK4XftziRhwAf8QAfipD7HXXWj25mgkom",
+      "CKy3KzEMSL1PQV6Wppggoqi2nGA7teE4L7JipEK89yqj",
+      "4qCRDHMoJkmffPZtXts8qjwDVdJh5Nq2kjQJaP9RyHRP",
+      "6RXZMVwG1ZR9gjMhduoiciu8RtR1fL9XQjq45xcZSLwj",
+      "8WwqQ3fZgZJWgVoEM26QB6Beuy87r4DT8Vh1FwX7kv3F",
+      "ED7SnYQnC4iWZKugaes6KMKQvWdp2yBR5dY5vcUoGxUf",
+      "CPJApXtdwfhihsiXULTBDxRhsZnA1uzUqBSLwQNvsDQQ",
+      "BdBt3GvWSwktKSTrgkwfqiZfqYUF1hA9uun6jfeU6sar",
+      "5dQm4iZQTK4LvMZ1qW6Y3JKEXrRmh68fjv4LXPiEYPEJ",
+      "3MCFnFjxsbS1SKHonRLbsR6PRHpUeXRfKn74Av8b7Nan",
+      "FfPVu9GCtCy7wfrMN6ZdqqfcHCHiJnt1ei5VYzzShEw5",
+      "CYic5uffo2SLLy2gS4DDhVGmcA8oTqXZzQJYEyxtgouY"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "OKX": {
+    "addresses": [
+      "GD3tr9DR8ZnSy2pQ22RwzSR4vKY48SxHLdgCymXQ6W5i",
+      "4UP7t9p3HEd9gfF9gFKkGa1ZvLXFS2naHgnxB4fwpLfS",
+      "5njZuDSS2WTFkvWWsgv8Q4TfQBuCASKJAztc5yF2qLWZ",
+      "3n7E2gZmCaDGpmvmHVHhHg13x7y1zG37tnEXvizxnKY1",
+      "8wM44Ryv9DFCSfkgUnPEPgnsc53arT4cnmXL6LnnC4UW",
+      "9x6ZXkYmrzs36pXPUEtWQfSyvvywLNcgFFGoBySz8g3j",
+      "C68a6RCGLiPskbPYtAcsCjhG8tfTWYcoB4JjCrXFdqyo",
+      "B5kYHL7ZSDUXdNmJZdkZrcnuydDb9xxqztEon5HuqGgu",
+      "3fsEw3NcHfU1oDnZKnWcztMZWta3mnTkjZRGmHmxugQt",
+      "C1Fr2dLHvNMWKFuiM5nK5StfgWjbM6QcZcC5nkcYghkJ",
+      "EhDyxGpEz9hryw6MwiBB7898WEzcoGTCAjVQMHbo6Q1M",
+      "8PFD2CYF275p8YdRmhk4C1wcNoKeRVrouYdMbZV6HwHH"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Kraken": {
+    "addresses": [
+      "CAo1dCGYrB6NhHh5xb1cGjUiu86iyCfMTENxgHumSve4",
+      "EFE3j1pcSP1paUzA86zW7989ZjsFP2J7ginyUqo4ewqR",
+      "6LY1JzAFVZsP2a2xKrtU6znQMQ5h4i7tocWdgrkZzkzF",
+      "E2RvJg2myWpKcbkhBuF81gfhYr6KvmNcDbSmr5qnatYy",
+      "CDhUgGEiUxx1aTbnoiSAKcmBhnGUFRQ6AMzuLQRD5VFZ",
+      "HzKVUmEAuaf8nV3tcJk2uZKohmLwtk1351ASCdqT5B8q",
+      "F7RkX6Y1qTfBqoX5oHoZEgrG1Dpy55UZ3GfWwPbM58nQ",
+      "9cNE6KBg2Xmf34FPMMvzDF8yUHMrgLRzBV3vD7b1JnUS",
+      "FWznbcNXWQuHTawe9RxvQ2LdCENssh12dsznf4RiouN5",
+      "3xCgDJQ3PSQpoMFnijF9sQNV3J6onmQk7U3ZkxjigeAk"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "KuCoin": {
+    "addresses": [
+      "GL8T72PKygWaYrLKtSteN9UUvYYnuC8azNDunk4eaqqQ",
+      "6BhBoBB47wSGjK5uzcGWNcTf2oNRPQNuv6GVdkNyj9PB",
+      "FZ1t8TZtx7VSCQdBsxvFJiezj9paUBF6Ub7RKA2eTGyE",
+      "AGVhmrhDi3RKLu9nxnRqp3CUpaG3SVeYXWkWcygHAk8N",
+      "7gQ1CfjdysJkSEVSDXNjJHnzrqvP2zQYQDJHJP67o1bb",
+      "CAxKWUpSbsNsWu2gEFjed64jrNxiNYfRMVEMahshHotb",
+      "FPRFLszBJFHCThF2yWvkGkfvtwyFPRGX9MFHnDGP6UYp",
+      "DBmae92YTQKLsNzXcPscxiwPqMcz9stQr2prB5ZCAHPd",
+      "HVh6wHNBAsG3pq1Bj5oCzRjoWKVogEDHwUHkRz3ekFgt",
+      "BmFdpraQhkiDQE6SnfG5omcA1VwzqfXrwtNYBwWTymy6",
+      "57vSaRTqN9iXaemgh4AoDsZ63mcaoshfMK8NP3Z5QNbs"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Bitget": {
+    "addresses": [
+      "EdFUcP2f6j9iBg5BqsgJn3WDr1JieiKCo41hZ5Zrsk6w",
+      "7TWnq4WeYcwQWBCwKeEX2Q9xqVtthPGkB7adNvueuVuh",
+      "4S8C1yrRZmJYPzCqzEVjZYf6qCYWFoF7hWLRzssTCotX",
+      "A77HErqtfN1hLLpvZ9pCtu66FEtM8BveoaKbbMoZ4RiR",
+      "8ZPaybdHeNwpoxmU1ALcbLoE3eK443Jq4emk82VCscag",
+      "48Zo7g9SReCWmNtCvr2es4H9CLCRQHrSND2Wzi61sCsQ",
+      "EPxGiguU5j5tKFnMQpzMrzczEQ5NRtLWrpG9fADvtadX",
+      "3zgTa8upNuA9jFetF9npfvviwDZFXh4cZMhh8kBBC8Uu"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Upbit": {
+    "addresses": [
+      "555oNTKdRECgyLn8fBvySoN6hXMCszFq1Y4oea9p3ZFB",
+      "Ahgd7ZczsP6XcWuhsF1Hn7i9W31uHMMPkmffrALL7ers",
+      "3jn81xbBK95zf5A1K4jRMzTicWxKM6X8BzYWzhPtFjuF",
+      "6mearRPb9Bma9Ad9wCKnGtVbTeqDyZQ6PPxDRpBUNdJU",
+      "6VGNcrNuhwCwWZDQoA9QoyJxKtb4FEGLnieScUnLbeKJ",
+      "2YERiDP8JqbmKDDUhPQtEfWozafQm1cdwi6KrmYo2app",
+      "8jjpnSUhm5UYghznhcdkwwEUFyke6z5TchHEtUUgW8hX",
+      "WR87TKyUfMDzGojFvRxq2f1xf7Jcgkvoc7Z2tDVLHdY",
+      "7mhcgF1DVsj5iv4CxZDgp51H6MBBwqamsH1KnqXhSRc5",
+      "2kmT6TAgwy2aPt4wtiSmmosyTZ8kVRSXwXxtbgJ8QfLM",
+      "ExB8m6GpZ7hg8NjSDDoEsg6U4XSvWUVD3wLfTLd51xXY",
+      "836euAuAeEWdjHFZ87vKhR6n4Vu1V22yMvj1MyzCdVU3",
+      "BJGyq6BDtn4KXrGr1yfBuCXyxToP6CWfA4sYRyDPSEq4",
+      "A5QtrjyeJLZ62HqSZAmiqAboiBJZX3eQbCe4QSLBGXXN",
+      "2nE99H3e9gfbxKaGodnTwixMgZwgTtKg45aoCFwdEfJS"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "HTX": {
+    "addresses": [
+      "Cw32Ny2xcYdpfJmvFd7h2pRhcbcjoJFq8KrrA8YLwZeh",
+      "BY4StcU9Y2BpgH8quZzorg31EGE4L1rjomN8FNsCBEcx",
+      "HugT8TBjgf5mxrzyEjiUNUot1EP2gh4wCJDWmyKkXM6y",
+      "8NBEbxLknGv5aRYefFrW2qFXoDZyi9fSHJNiJRvEcMBE",
+      "38QU8LKVK1Ew5uzsqttamNTTFxvnfzgi2ACQvj3ekuom"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Crypto.com": {
+    "addresses": [
+      "ADqZYsW9SVZ6bCSGDqfBiPkfaZuQKGg79MA357otX8Ud",
+      "9VWD3xbXWtC2aGN1mQcVFwZMRPSjJfknNYq4DqGQ7B8B",
+      "22Wnk8PwyWZV7BfkZGJEKT9jGGdtvu7xY6EXeRh7zkBa",
+      "6FEVkH17P9y8Q9aCkDdPcMDjvj7SVxrTETaYEm8f51Jy",
+      "AobVSwdW9BbpMdJvTqeCN4hPAmh4rHm7vwLnQ5ATSyrS"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Bitfinex": {
+    "addresses": [
+      "FyJBKcfcEBzGN74uNxZ95GxnCxeuJJujQCELpPv14ZfN",
+      "FxteHmLwG9nk1eL4pjNve3Eub2goGkkz6g6TbvdmW46a",
+      "GnCRxKqUEPouYMvTb5nJMGrDB3VkTXZnDTaDuVZdnWA3"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "BingX": {
+    "addresses": [
+      "AbbnxVgv4pJmBtBXKHH33ZLghJF4h8Bp7SyLPoxJSLXk",
+      "GsCY6n5RY7v3qcDAzGYcDShNzthngVs4So4b5nmVuqSN",
+      "98heymfQya7PVVfykJy7BJDL7q3SLVEo9Hcajtxqxr99",
+      "EsihucMzUvGerCuAeV5vtpEPKtn5dew9kfqDqcn9WMwL",
+      "8MzxktaLy84FF5JptN26SRnzCx4AAouUKVXjLtrHFsFT",
+      "6xfPFKnwv48XvxpFf4athewqGFvSTKQcMmfzYapgZ2sG",
+      "J1BGeK3ojLF5dqaNFLg7WkQToyYisY79pWvHHscTJcpD",
+      "J1BDJEdvTmmcjeTMVTHLPaaNvuQ3mdxeuWEM1YyMksLy",
+      "3Ln6KEgLoMR2xFHfqtYazP7CxFQPDtUVVtwCVsLKVfmV"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Robinhood": {
+    "addresses": [
+      "4xLpwxgYuPwPvtQjE94RLS4WZ4aD8NJYYKr2AJk99Qdg",
+      "AeBwztwXScyNNuQCEdhS54wttRQrw3Nj1UtqddzB4C7b",
+      "9FtGm6hJULCpA8An4sFg5ysHUExDZBtMeDCxsYnTnWh5",
+      "6brjeZNfSpqjWoo16z1YbywKguAruXZhNz9bJMVZE8pD",
+      "8Tp9fFkZ2KcRBLYDTUNXo98Ez6ojGb6MZEPXfGDdeBzG",
+      "DwdrYTtTWHfnfJBiN2RH6EgPbquDQLjZTfTwpykPEq1g",
+      "EMXJqHznGSnSzeMyigBGQNEFw4EeaNDbj1UwaFTpp3sg"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Wintermute": {
+    "addresses": [
+      "44P5Ct5JkPz76Rs2K6juC65zXMpFRDrHatxcASJ4Dyra",
+      "MfDuWeqSHEqTFVYZ7LoexgAK9dxk7cy4DFJWjWMGVWa",
+      "5sTQ5ih7xtctBhMXHr3f1aWdaXazWrWfoehqWdqWnTFP",
+      "7sMiW38oLg5q9SKNoyPaH2Ee1VhpGdMCDrC4Lo4uLBBE"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  },
+  "Fomo": {
+    "addresses": [
+      "R4rNJHaffSUotNmqSKNEfDcJE8A7zJUkaoM5Jkd7cYX",
+      "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51"
+    ],
+    "confidence": "registry_identified",
+    "source": "user_provided_manual_registry"
+  }
+}

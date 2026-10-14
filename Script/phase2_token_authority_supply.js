@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+const fs=require('fs'),path=require('path'),readline=require('readline');
+const { attachRunMetadata } = require('./run_metadata');
+const throttle = require('./rpc_throttle');
+const ROOT=path.resolve(__dirname,'..'),CFG=path.join(ROOT,'Config','config.json');
+const started=Date.now();
+const short=x=>x&&x.length>12?`${x.slice(0,6)}...${x.slice(-6)}`:x||'UNKNOWN';
+const valid=x=>typeof x==='string'&&/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(x);
+function loadConfig(){if(!fs.existsSync(CFG))throw Error('CONFIG_NOT_FOUND');const c=JSON.parse(fs.readFileSync(CFG,'utf8'));c.helius.api_key = String(c.helius?.api_key || '').trim();if(!c.helius.api_key || c.helius.api_key.startsWith('PASTE_'))throw Error('HELIUS_API_KEY_NOT_CONFIGURED');return c}
+function ask(){return new Promise(resolve=>{const rl=readline.createInterface({input:process.stdin,output:process.stdout});rl.question('Enter Token CA / Mint Address: ',a=>{rl.close();resolve(String(a||'').trim())})})}
+function readJson(file){if(!fs.existsSync(file))return null;try{return JSON.parse(fs.readFileSync(file,'utf8'))}catch{return null}}
+function readPhase1(mint){return readJson(path.join(ROOT,'Output',mint,'phase1-result.json'))||readJson(path.join(ROOT,'Data','phase1-result.json'))}
+function save(r){attachRunMetadata(r,2,r.input?.mint);const out=path.join(ROOT,'Output',r.input.mint,'phase2-result.json');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,JSON.stringify(r,null,2),'utf8');return out}
+function authorityState(value){return value?{status:'ACTIVE',address:value}:{status:'REVOKED',address:null}}
+function normalizeExtension(ext){if(typeof ext==='string')return{type:ext,state:null};if(!ext||typeof ext!=='object')return{type:'UNKNOWN',state:null};const type=ext.extension||ext.type||ext.name||'UNKNOWN';return{type,state:ext.state??null}}
+function findExtension(extensions,names){const wanted=names.map(x=>String(x).toLowerCase());return(extensions||[]).find(e=>wanted.includes(String(e?.extension??e?.type??e?.name??'').toLowerCase()))}
+async function req(url,opt,label,c){throttle.configure(c);const max=Number(c.scanner?.max_retries??3),base=Number(c.scanner?.retry_delay_ms??1000),timeout=Number(c.scanner?.request_timeout_ms??15000);for(let a=1;a<=max;a++){const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),timeout);try{console.log(`  ${label} : request (${a}/${max})`);await throttle.takeSlot();const res=await fetch(url,{...opt,signal:ctl.signal}),txt=await res.text();let body;try{body=txt?JSON.parse(txt):{}}catch{body={raw:txt}}if(res.status===401)throw Error('HTTP_401_UNAUTHORIZED');if(res.status===403)throw Error('HTTP_403_FORBIDDEN');if(throttle.isRetryableStatus(res.status)||res.status>=500){if(a<max){console.log(`  ↻ RETRY   : HTTP ${res.status}`);await new Promise(r=>setTimeout(r,throttle.backoffMs(a,base,throttle.retryAfterMs(res.headers.get('retry-after')))));continue}throw Error(`HTTP_${res.status}`)}if(!res.ok)throw Error(`HTTP_${res.status}: ${body?.error?.message||body?.message||body?.raw||''}`);if(body?.error)throw Error(`RPC_${body.error.code??'UNKNOWN'}: ${body.error.message??'Unknown RPC error'}`);return body}catch(e){if(e.message==='HTTP_401_UNAUTHORIZED'||e.message==='HTTP_403_FORBIDDEN')throw e;if(a>=max)throw e;console.log(`  ↻ RETRY   : ${e.name==='AbortError'?'TIMEOUT':e.message}`);await new Promise(r=>setTimeout(r,throttle.backoffMs(a,base)))}finally{clearTimeout(tm)}}throw Error('REQUEST_FAILED')}
+async function main(){
+console.log('\n╔══════════════════════════════════════════════════════╗\n║ PHASE 2 — TOKEN AUTHORITY & SUPPLY                  ║\n╚══════════════════════════════════════════════════════╝\n');
+let config;try{config=loadConfig()}catch(e){console.log(`STATUS     : FAILED ✗\nERROR      : ${e.message}`);process.exitCode=1;return}
+let mint=String(process.argv[2]||process.env.SCAN_MINT||'').trim();let p1=null;
+if(mint)p1=readPhase1(mint);else{
+  // Preserve standalone convenience: prefer the only known legacy/current Phase 1 result before prompting.
+  const legacy=readJson(path.join(ROOT,'Data','phase1-result.json'));
+  if(legacy?.input?.mint)p1=legacy;
+  if(p1)mint=String(p1.input?.mint||p1.token?.mint||'').trim();
+}
+if(!mint)mint=await ask();if(!mint){console.log('\nSTATUS     : FAILED ✗\nERROR      : TOKEN_MINT_REQUIRED');process.exitCode=1;return}
+if(!valid(mint)){console.log('\nSTATUS     : FAILED ✗\nERROR      : INVALID_SOLANA_TOKEN_MINT');process.exitCode=1;return}
+if(!p1)p1=readPhase1(mint);
+const r={phase:2,phase_name:'TOKEN_AUTHORITY_SUPPLY',status:'FAILED',timestamp:new Date().toISOString(),elapsed_seconds:null,input:{mint,source:p1?'phase1-result.json':'interactive'},helius:{network:config.helius.network,rpc_health:'UNKNOWN'},token:{mint,program:null,token_standard:null,decimals:null,supply:null,initialized:null},authority:{mint:{status:'UNKNOWN',address:null},freeze:{status:'UNKNOWN',address:null}},token_2022:{applicable:false,extensions:[],transfer_fee:null},creator_dev:{creator:'UNKNOWN',dev:'UNKNOWN',note:'Not deep-searched in Phase 2; only directly available data is used.'},data_sources:[],missing:[],errors:[]};
+console.log(`TOKEN\n  Mint       : ${short(mint)}\n  Network    : ${config.helius.network}\n\nHELIUS CONNECTION`);
+try{
+const base=String(config.helius.rpc_url).trim();const rpcUrl=`${base}${base.includes('?')?'&':'?'}api-key=${encodeURIComponent(config.helius.api_key)}`;
+const health=await req(rpcUrl,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:'phase2-health',method:'getHealth',params:[]})},'Helius RPC',config);if(health?.result!=='ok')throw Error('HELIUS_RPC_HEALTH_NOT_OK');r.helius.rpc_health='OK';r.data_sources.push('Helius RPC getHealth');console.log('  ✓ API / RPC  : AUTHENTICATED\n  ✓ RPC Health  : OK\n\nTOKEN AUTHORITY & SUPPLY');
+const acct=await req(rpcUrl,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:'phase2-account',method:'getAccountInfo',params:[mint,{encoding:'jsonParsed'}]})},'getAccountInfo',config);r.data_sources.push('Helius RPC getAccountInfo');const v=acct?.result?.value;if(!v)throw Error('TOKEN_ACCOUNT_NOT_FOUND');
+const info=v?.data?.parsed?.info||{};r.token.program=v.owner||null;r.token.decimals=info.decimals??null;r.token.supply=info.supply??null;r.token.initialized=info.isInitialized??null;
+r.authority.mint=authorityState(info.mintAuthority??null);r.authority.freeze=authorityState(info.freezeAuthority??null);
+const rawExt=Array.isArray(info.extensions)?info.extensions:[];r.token_2022.applicable=(r.token.program==='TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');r.token_2022.extensions=rawExt.map(normalizeExtension);
+if(r.token_2022.applicable){const tf=findExtension(rawExt,['transferFeeConfig','transfer_fee_config','transferfeeconfig']);if(tf){const s=tf.state||{};const older=s.olderTransferFee||s.oldTransferFee||null;const newer=s.newerTransferFee||s.newTransferFee||null;r.token_2022.transfer_fee={config_authority:s.transferFeeConfigAuthority??s.configAuthority??null,withdraw_withheld_authority:s.withdrawWithheldAuthority??null,older_transfer_fee:older?{epoch:older.epoch??null,max_fee:older.maximumFee??older.maxFee??null,basis_points:older.transferFeeBasisPoints??older.basisPoints??null}:null,newer_transfer_fee:newer?{epoch:newer.epoch??null,max_fee:newer.maximumFee??newer.maxFee??null,basis_points:newer.transferFeeBasisPoints??newer.basisPoints??null}:null,raw_state:s}}else r.token_2022.transfer_fee=null}
+console.log(`  Mint       : ${short(mint)}\n  Program    : ${r.token.program||'UNKNOWN'}\n  Decimals   : ${r.token.decimals??'UNKNOWN'}\n  Supply     : ${r.token.supply??'UNKNOWN'}\n\nAUTHORITY`);
+console.log(`  Mint       : ${r.authority.mint.status}${r.authority.mint.address?` (${short(r.authority.mint.address)})`:''}\n  Freeze     : ${r.authority.freeze.status}${r.authority.freeze.address?` (${short(r.authority.freeze.address)})`:''}`);
+console.log('\nTOKEN-2022');
+if(r.token_2022.applicable){console.log(`  Applicable : YES\n  Extensions : ${r.token_2022.extensions.length?r.token_2022.extensions.map(x=>x.type).join(', '):'NONE'}`);if(r.token_2022.transfer_fee){const tf=r.token_2022.transfer_fee,latest=tf.newer_transfer_fee||tf.older_transfer_fee;console.log(`  Transfer Fee : ${latest?`${latest.basis_points??'UNKNOWN'} bps, max ${latest.max_fee??'UNKNOWN'}`:'CONFIGURED'}`)}else console.log('  Transfer Fee : NOT DETECTED')}else console.log('  Applicable : NO');
+console.log('\nCREATOR / DEV\n  Creator    : UNKNOWN\n  Dev        : UNKNOWN\n  Search     : SKIPPED (resource-saving rule)');
+r.status=(r.token.program&&r.token.decimals!==null&&r.token.supply!==null)?'COMPLETE':'PARTIAL';if(r.status==='PARTIAL')r.missing.push('authority_or_supply_fields');
+}catch(e){r.status='FAILED';r.errors.push({source:'phase2',message:e.message});if(e.message==='HTTP_401_UNAUTHORIZED')console.log('\nAUTHENTICATION\n  ✗ Helius rejected the API key (401).\n  Check config/config.json.');else if(e.message==='HTTP_403_FORBIDDEN')console.log('\nAUTHORIZATION\n  ✗ Helius denied access (403).');else console.log(`\n  ✗ ${e.message}`)}
+r.elapsed_seconds=Number(((Date.now()-started)/1000).toFixed(2));const out=save(r);
+console.log(`\nRESULT\n  Mint Authority : ${r.authority.mint.status}\n  Freeze Authority: ${r.authority.freeze.status}\n  Program        : ${r.token.program||'UNKNOWN'}\n  Supply         : ${r.token.supply??'UNKNOWN'}\n  Extensions     : ${r.token_2022.extensions.length?r.token_2022.extensions.map(x=>x.type).join(', '):'NONE'}\n  Creator        : UNKNOWN\n  Dev            : UNKNOWN\n──────────────────────────────────────────────────────\nSTATUS     : ${r.status==='COMPLETE'?'COMPLETE ✓':r.status==='PARTIAL'?'PARTIAL ⚠':'FAILED ✗'}\nTIME       : ${r.elapsed_seconds.toFixed(2)}s\nOUTPUT     : ${path.relative(ROOT,out)}\n──────────────────────────────────────────────────────`);if(r.status==='FAILED')process.exitCode=1}
+main().catch(e=>{console.log(`\nSTATUS     : FAILED ✗\nERROR      : ${e.message}`);process.exitCode=1});

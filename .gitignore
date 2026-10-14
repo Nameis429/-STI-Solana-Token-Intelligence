@@ -1,5 +1,13 @@
-# Object file
-*.o
+# Secrets — never commit a real key
+Config/config.json
 
-# Ada Library Information
-*.ali
+# Scan artifacts (per-mint outputs, regenerated on each run)
+Output/
+
+# Local social-signal overrides (the .example template is committed)
+Data/social_signals.json
+
+# Runtime
+node_modules/
+*.log
+.DS_Store

@@ -1,0 +1,1 @@
+{"description":"On-chain intelligence toolkit for Solana tokens — 12-phase analysis pipeline with an 18-rule evaluation engine","name":"solana-token-intelligence","scripts":{"start":"node main.js"},"version":"1.0.0"}

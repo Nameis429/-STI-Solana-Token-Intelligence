@@ -1,0 +1,868 @@
+{
+  "schema_version": "2.0.0",
+  "phase": 9,
+  "engine": "Risk Engine",
+  "config_version": "2.0.0",
+  "description": "Phase 9 v2 rule catalog. Statuses are evidence-based; missing/partial coverage is never treated as absence. Thresholds are inherited unless explicitly documented.",
+  "settings": {
+    "timezone": "Asia/Jakarta",
+    "enabled_statuses": [
+      "TRIGGERED",
+      "PROVISIONAL",
+      "NOT_TRIGGERED",
+      "UNKNOWN",
+      "INSUFFICIENT_DATA",
+      "DISABLED"
+    ],
+    "fail_on_invalid_config": true,
+    "disabled_rule_status": "DISABLED",
+    "require_evidence_refs_for_triggered": true,
+    "deduplicate_evidence": true,
+    "do_not_score_in_phase9": true,
+    "deduplication_policy": {
+      "event_identity": [
+        "signature",
+        "wallet_id",
+        "token_mint",
+        "event_class"
+      ],
+      "sequence_identity": [
+        "transfer_signature",
+        "recipient_wallet",
+        "sell_signature",
+        "token_mint"
+      ],
+      "count_unique_transactions_not_repeated_evidence_refs": true,
+      "prevent_one_transfer_from_pairing_with_multiple_sell_events_without_distinct_sequence": true
+    },
+    "evaluation_policy": {
+      "primary_status": "TRIGGERED",
+      "alternative_status": "PROVISIONAL",
+      "provisional_requires_explicit_rule_alternative": true,
+      "do_not_downgrade_structural_data_gaps_by_lowering_numeric_thresholds": true,
+      "missing_or_partial_data_must_not_be_treated_as_NOT_TRIGGERED": true,
+      "transfer_is_not_sell": true,
+      "holder_concentration_is_not_trading_concentration": true,
+      "selected_wallet_sample_is_not_market_wide_volume": true,
+      "version": "2.0.0",
+      "triggered_requires_rule_specific_evidence": true,
+      "provisional_requires_enabled_alternative_and_valid_evidence": true,
+      "all_configured_rules_must_be_returned": true
+    }
+  },
+  "categories": {
+    "SELL_PRESSURE_RISK": {
+      "enabled": true,
+      "rules": {
+        "SPR-01": {
+          "enabled": true,
+          "name": "Large Holder Sell Ratio",
+          "description": "Sell amount relative to wallet balance immediately before the sell.",
+          "metric": "sell_amount / balance_before_sell",
+          "threshold": 0.2,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "verified_sell_amount",
+            "historical_balance_before_sell"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "window_seconds": null,
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "SPR-01",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateSpr01 in Script/phase9_risk_engine.js",
+            "required_data": [
+              "per-wallet ordered SELL events with verified amount_raw",
+              "balance_before_sell reconstructed from the same wallet's observed ledger"
+            ],
+            "ledger_discipline": "history.complete===true AND BUY+RECEIVE-SELL-TRANSFER_OUT===current balance (exact); failing wallets are EXCLUDED, never negative evidence",
+            "counting_unit": "unique SELL events deduplicated by event_id",
+            "metric": "sell_ratio = sell_amount / balance_before_sell",
+            "threshold_source": "rule.threshold (0.2); fallback rule.thresholds.sell_ratio then 0.5",
+            "exclusions": [
+              "LIQUIDITY_POOL wallets",
+              "SELF_TRANSFER nets to zero",
+              "any unverifiable amount invalidates that wallet"
+            ],
+            "statuses": {
+              "TRIGGERED": ">=1 qualifying SELL",
+              "NOT_TRIGGERED": "evaluated wallets exist, none qualify",
+              "INSUFFICIENT_DATA": "no reconcilable wallet ledger"
+            }
+          }
+        },
+        "SPR-02": {
+          "enabled": true,
+          "name": "Repeated Sell Activity",
+          "description": "Count verified SELL events by one wallet within the configured window.",
+          "metric": "verified_sell_event_count",
+          "min_count": 5,
+          "window_seconds": 3600,
+          "required_data": [
+            "verified_sell_events",
+            "timestamps",
+            "wallet_id",
+            "complete_window_coverage",
+            "unique_transaction_or_event_identity",
+            "verified_sell_classification"
+          ],
+          "initial_eligibility": "CONDITIONAL",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": true,
+              "status": "PROVISIONAL",
+              "threshold": {
+                "min_unique_sell_events": 3,
+                "window_seconds": 3600
+              },
+              "note": "PROVISIONAL hanya jika minimal 3 event SELL unik/terverifikasi dalam window 1 jam; event wajib dideduplikasi. Ambang awal untuk pengujian, bukan bukti risiko pasar secara luas."
+            }
+          },
+          "evaluator": "SPR-02",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        },
+        "SPR-03": {
+          "enabled": true,
+          "name": "Connected Wallet Sell Volume Share",
+          "description": "Connected wallets' sell volume divided by total token trading volume for the same interval.",
+          "metric": "connected_wallet_sell_volume / total_trading_volume",
+          "threshold": 0.05,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "verified_wallet_relationships",
+            "connected_wallet_sell_volume",
+            "total_trading_volume",
+            "matching_period_and_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "SPR-03",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        },
+        "SPR-04": {
+          "enabled": true,
+          "name": "Holder Balance Reduction Attributable to Sells",
+          "description": "Verified sell-attributed balance reduction relative to balance at period start.",
+          "metric": "sell_attributed_balance_reduction / period_start_balance",
+          "threshold": 0.2,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "historical_balances",
+            "verified_sell_events",
+            "event_attribution"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "SPR-04",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateSpr04 in Script/phase9_risk_engine.js",
+            "ledger_discipline": "same as SPR-01: complete + reconciled + LP excluded",
+            "metric": "total_sell_volume / peak_reconstructed_balance (period_start_balance proxied by peak; documented)",
+            "threshold_source": "rule.threshold (0.2)",
+            "counting_unit": "wallet",
+            "statuses": {
+              "TRIGGERED": ">=1 wallet >= threshold",
+              "NOT_TRIGGERED": "evaluated, none qualify",
+              "INSUFFICIENT_DATA": "no reconcilable ledger"
+            }
+          }
+        },
+        "SPR-05": {
+          "enabled": true,
+          "name": "Sell Volume Relative to Liquidity",
+          "description": "Sell volume divided by relevant pool liquidity, with aligned time and valuation units.",
+          "metric": "sell_volume / pool_liquidity",
+          "threshold": 0.05,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "verified_sell_volume",
+            "historical_pool_liquidity",
+            "pool_mapping",
+            "consistent_valuation_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "SPR-05",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateSellVsLiquidity in Script/phase9_risk_engine.js",
+            "required_data": [
+              "verified SELL events (bounded sample)",
+              "Phase 4 liquidity_snapshot.base (scan-time proxy, not historical series)"
+            ],
+            "metric": "total observed SELL volume / pool base-token balance (raw units both sides)",
+            "threshold_source": "rule.threshold (0.05)",
+            "counting_unit": "total unique observed SELL volume",
+            "statuses": {
+              "TRIGGERED": "ratio >= threshold",
+              "NOT_TRIGGERED": "sells observed, below threshold",
+              "INSUFFICIENT_DATA": "no usable pool snapshot or no verifiable sells"
+            }
+          }
+        }
+      }
+    },
+    "COORDINATED_TRADING_RISK": {
+      "enabled": true,
+      "rules": {
+        "CTR-01": {
+          "enabled": true,
+          "name": "Multi-Wallet Trading Activity",
+          "description": "Trading activity among at least the configured number of directly linked wallets.",
+          "min_wallets": 2,
+          "min_trades": 2,
+          "window_seconds": 86400,
+          "required_data": [
+            "verified_wallet_relationships",
+            "verified_trade_events",
+            "timestamps"
+          ],
+          "initial_eligibility": "CONDITIONAL",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "CTR-01",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateCtr01 in Script/phase9_risk_engine.js",
+            "required_data": [
+              "funding-graph.json shared_funders (Phase 8B collector)",
+              "observed BUY/SELL per wallet"
+            ],
+            "metric": "shared funder linking >= min_wallets (default 2) active wallets",
+            "counting_unit": "shared_funder",
+            "caveat": "shared funder (esp. CEX) does not prove common ownership \u2014 investigative lead only"
+          }
+        },
+        "CTR-02": {
+          "enabled": true,
+          "name": "Funding-to-Trading Relationship",
+          "description": "A wallet with a verified funding relationship trades within the configured time after funding.",
+          "window_seconds": 86400,
+          "required_data": [
+            "verified_funding_relationship",
+            "funding_timestamp",
+            "recipient_wallet",
+            "verified_trade_event"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "CTR-02",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateCtr02 in Script/phase9_risk_engine.js",
+            "required_data": [
+              "funding-graph.json per-wallet funders with block_time",
+              "first observed BUY/SELL per wallet"
+            ],
+            "metric": "funder->wallet funding at Tf, first trade at Tt, 0 <= Tt-Tf <= window_seconds (86400)",
+            "counting_unit": "unique_funder_wallet_sequence",
+            "caveat": "temporal association only; funding does not prove control of the trade"
+          }
+        },
+        "CTR-03": {
+          "enabled": true,
+          "name": "Linked Transfer Followed by Sell",
+          "description": "A recipient sells the same token after a traceable transfer within the configured interval.",
+          "window_seconds": 86400,
+          "required_data": [
+            "verified_token_transfer",
+            "sender_wallet",
+            "recipient_wallet",
+            "verified_sell_event",
+            "token_mint",
+            "timestamps"
+          ],
+          "initial_eligibility": "CONDITIONAL",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Tidak ada ambang alternatif numerik sampai sequence unik dan relasi transfer\u2192SELL tervalidasi."
+            }
+          },
+          "sequence_validation": {
+            "require_transfer_to_recipient_match": true,
+            "require_sell_by_same_recipient": true,
+            "require_sell_after_transfer": true,
+            "same_token_mint_required": true,
+            "counting_unit": "unique_transfer_sell_sequence",
+            "one_transfer_multiple_sell_pairing": "disallow_unless_each_pair_is_independently_justified"
+          },
+          "evaluator": "CTR-03",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        },
+        "CTR-04": {
+          "enabled": true,
+          "name": "Connected Group Trading Volume Share",
+          "description": "Connected group's trading volume divided by total token trading volume.",
+          "metric": "connected_group_trading_volume / total_trading_volume",
+          "threshold": 0.1,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "verified_wallet_group",
+            "connected_group_trading_volume",
+            "total_trading_volume",
+            "matching_period_and_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "CTR-04",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        },
+        "CTR-05": {
+          "enabled": true,
+          "name": "Repeated Linked Trading Events",
+          "description": "Count distinct, directly linked trading events in the configured interval.",
+          "min_count": 2,
+          "window_seconds": 604800,
+          "required_data": [
+            "verified_linked_events",
+            "event_ids",
+            "timestamps",
+            "deduplication_keys"
+          ],
+          "initial_eligibility": "CONDITIONAL",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Tidak ada ambang alternatif numerik sampai event/sequence independen dan relasi wallet tervalidasi."
+            }
+          },
+          "sequence_validation": {
+            "counting_unit": "unique_linked_event_sequence",
+            "deduplicate_by": [
+              "event_id",
+              "signature",
+              "wallet_id",
+              "relationship_id"
+            ],
+            "require_verified_wallet_relationship": true,
+            "repeated_evidence_reference_is_not_independent_event": true
+          },
+          "evaluator": "CTR-05",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        }
+      }
+    },
+    "TRADING_CONCENTRATION_RISK": {
+      "enabled": true,
+      "rules": {
+        "TCR-01": {
+          "enabled": true,
+          "name": "Top Seller Volume Share",
+          "description": "Largest wallet sell volume divided by total sell volume.",
+          "metric": "max_wallet_sell_volume / total_sell_volume",
+          "threshold": 0.3,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "complete_or_representative_sell_volume_by_wallet",
+            "total_sell_volume",
+            "matching_period_and_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "TCR-01",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11 (diagnostic only)",
+            "evaluator": "tcrDiagnostics in Script/phase9_risk_engine.js",
+            "note": "Rule requires COMPLETE or REPRESENTATIVE market volume; Phase 8 is a bounded top-holder-biased sample. Evaluator publishes the diagnostic metric (top share of OBSERVED volume, labeled bounded-sample) and keeps INSUFFICIENT_DATA. No fabricated trigger. A future audited threshold + coverage gate can promote this without changing the metric.",
+            "metric": "top_wallet_volume / observed_total_volume (bounded sample)",
+            "threshold_status": "unaudited \u2014 no trigger evaluated"
+          }
+        },
+        "TCR-02": {
+          "enabled": true,
+          "name": "Top Buyer Volume Share",
+          "description": "Largest wallet buy volume divided by total buy volume.",
+          "metric": "max_wallet_buy_volume / total_buy_volume",
+          "threshold": 0.3,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "complete_or_representative_buy_volume_by_wallet",
+            "total_buy_volume",
+            "matching_period_and_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "TCR-02",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11 (diagnostic only)",
+            "evaluator": "tcrDiagnostics in Script/phase9_risk_engine.js",
+            "note": "Rule requires COMPLETE or REPRESENTATIVE market volume; Phase 8 is a bounded top-holder-biased sample. Evaluator publishes the diagnostic metric (top share of OBSERVED volume, labeled bounded-sample) and keeps INSUFFICIENT_DATA. No fabricated trigger. A future audited threshold + coverage gate can promote this without changing the metric.",
+            "metric": "top_wallet_volume / observed_total_volume (bounded sample)",
+            "threshold_status": "unaudited \u2014 no trigger evaluated"
+          }
+        },
+        "TCR-03": {
+          "enabled": true,
+          "name": "Connected Group Trading Concentration",
+          "description": "Connected group's trading volume divided by total trading volume.",
+          "metric": "connected_group_trading_volume / total_trading_volume",
+          "threshold": 0.5,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "verified_wallet_group",
+            "connected_group_trading_volume",
+            "total_trading_volume",
+            "matching_period_and_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "TCR-03",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        },
+        "TCR-04": {
+          "enabled": true,
+          "name": "Trading Concentration Increase",
+          "description": "Increase in the same concentration metric between comparable windows, expressed in percentage points.",
+          "threshold_pp": 15,
+          "operator": ">=",
+          "current_window_seconds": 86400,
+          "comparison_window_seconds": 86400,
+          "required_data": [
+            "current_concentration",
+            "previous_concentration",
+            "comparable_coverage",
+            "same_metric_definition"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "TCR-04",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        }
+      }
+    },
+    "LIQUIDITY_RELATED_TRADING_RISK": {
+      "enabled": true,
+      "rules": {
+        "LTR-01": {
+          "enabled": true,
+          "name": "Sell Volume to Liquidity Ratio",
+          "description": "Sell volume in the window divided by relevant pool liquidity.",
+          "threshold": 0.05,
+          "operator": ">=",
+          "unit": "ratio",
+          "window_seconds": 3600,
+          "required_data": [
+            "verified_sell_volume",
+            "historical_pool_liquidity",
+            "pool_mapping",
+            "matching_window_and_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "LTR-01",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateSellVsLiquidity in Script/phase9_risk_engine.js",
+            "required_data": [
+              "verified SELL events with timestamps",
+              "Phase 4 liquidity_snapshot.base (scan-time proxy)"
+            ],
+            "metric": "max SELL volume in any rolling window_seconds (3600) / pool base-token balance",
+            "threshold_source": "rule.threshold (0.05)",
+            "counting_unit": "max sell volume in rolling window",
+            "note": "window is rolling-max over observed history (burst-vs-depth), documented"
+          }
+        },
+        "LTR-02": {
+          "enabled": true,
+          "name": "Liquidity Decline",
+          "description": "Relative decline between comparable pool liquidity snapshots.",
+          "threshold": 0.2,
+          "operator": ">=",
+          "unit": "ratio",
+          "window_seconds": 86400,
+          "required_data": [
+            "pool_liquidity_snapshot_start",
+            "pool_liquidity_snapshot_end",
+            "same_pool",
+            "consistent_valuation_units"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "LTR-02",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateLtr02 in Script/phase9_risk_engine.js",
+            "required_data": [
+              "liquidity_history.jsonl with >=2 comparable snapshots for the same pool (appended by Phase 4 each scan)"
+            ],
+            "metric": "(old_base - new_base) / old_base per pool, two most recent entries; max decline reported",
+            "threshold_source": "rule.threshold (0.2)",
+            "counting_unit": "pool_with_two_comparable_snapshots",
+            "note": "inter-scan interval is actual scan spacing, reported not assumed"
+          }
+        },
+        "LTR-03": {
+          "enabled": true,
+          "name": "Sell Pressure with Liquidity Decline",
+          "description": "Combined sell/liquidity ratio and liquidity decline conditions occurring within a related interval.",
+          "sell_liquidity_ratio_threshold": 0.05,
+          "liquidity_decline_threshold": 0.2,
+          "event_window_seconds": 3600,
+          "required_data": [
+            "verified_sell_volume",
+            "historical_pool_liquidity",
+            "liquidity_snapshots",
+            "pool_mapping",
+            "aligned_timestamps"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "LTR-03",
+          "status_on_missing_data": "INSUFFICIENT_DATA",
+          "evidence_contract": {
+            "implemented": "2026-10-11",
+            "evaluator": "evaluateLtr03 in Script/phase9_risk_engine.js",
+            "composite_of": [
+              "SPR-05 logic (sell/liquidity >= 0.05)",
+              "LTR-02 logic (decline >= 0.2)"
+            ],
+            "trigger": "both conditions hold",
+            "counting_unit": "composite_of_A_and_B"
+          }
+        },
+        "LTR-04": {
+          "enabled": true,
+          "name": "Estimated Price Impact",
+          "description": "Absolute estimated price impact from a protocol-appropriate pool model.",
+          "threshold": 0.05,
+          "operator": ">=",
+          "unit": "ratio",
+          "required_data": [
+            "pool_type_and_parameters",
+            "historical_pool_state",
+            "trade_amount",
+            "protocol_appropriate_impact_model",
+            "reference_price_definition"
+          ],
+          "initial_eligibility": "INSUFFICIENT_DATA",
+          "evidence_quality": {
+            "deduplicate_before_counting": true,
+            "require_transaction_identity": true,
+            "require_valid_event_class": true,
+            "require_timestamps_when_windowed": true
+          },
+          "evaluation": {
+            "primary": {
+              "threshold_source": "existing_rule_parameters",
+              "status": "TRIGGERED"
+            },
+            "alternative": {
+              "enabled": false,
+              "status": "PROVISIONAL",
+              "threshold": null,
+              "note": "Belum diaktifkan; perlu kriteria alternatif yang tervalidasi."
+            }
+          },
+          "evaluator": "LTR-04",
+          "status_on_missing_data": "INSUFFICIENT_DATA"
+        }
+      }
+    }
+  },
+  "calibration_notes": {
+    "scan_file": "phase9-result.json",
+    "scan_rules_total": 18,
+    "scan_status_counts": {
+      "INSUFFICIENT_DATA": 15,
+      "TRIGGERED": 3
+    },
+    "observed_issues": [
+      "SPR-02 reported a high event count; verify distinct transaction/event identities before treating the count as independent sells.",
+      "CTR-03 and CTR-05 sequence counts may be inflated by repeated or combinatorial evidence references; enforce unique sequence identity.",
+      "Rules requiring market-wide volume, historical balances, or pool history remain INSUFFICIENT_DATA when those inputs are unavailable."
+    ],
+    "caution": "Configuration metadata and provisional fields may require corresponding Phase 9 engine support. This ZIP updates the rule configuration only; it does not modify or test the engine script."
+  }
+}

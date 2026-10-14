@@ -57,9 +57,36 @@ Results are written to `Output/<mint>/` as JSON plus `report.html`.
 - `rpc_throttle.min_interval_ms` (default `110` ≈ 9 req/s): lower it for a faster paid key, raise it if you still hit 429s.
 - `market_volume` / `funding_graph` / `phase8` sections tune the optional collectors (concurrency, delays, caps).
 - `evaluation_guards.liquidity_credibility_ratio`: if the observed DEX pool is smaller than 1% of observed sell volume, liquidity-based rules honestly return `INSUFFICIENT_DATA`.
-- `Data/database-wallet.json`: your curated wallet list (`address`, `name`, `groups`, `emoji`). The bundled file is a starter set — **replace it with your own curation**; emoji modifiers (`🚫` = −10, `🚩` = −5) stack with role weights.
+- `Data/database-wallet.json`: your curated wallet list — see "Wallet database (manual)" below.
 - `Data/cex_registry.json`: known CEX/service addresses, excluded from holder-concentration and top buyer/seller rankings (totals unchanged).
-- `Data/social_signals.json` (optional, manual): social mentions for Phase 12 — informational only, never changes the verdict. See `social_signals.example.json`.
+
+## Wallet database (manual)
+
+Phases 7 and 11 can cross-reference your own curated wallet list. The list is
+personal, so the repo ships only a format example — add your wallets manually:
+
+1. Copy the example (or run `node merge_config.js`, which creates an empty
+   `Data/database-wallet.json` for you):
+   ```sh
+   cp Data/database-wallet.example.json Data/database-wallet.json
+   ```
+2. Edit `Data/database-wallet.json` — a top-level JSON array:
+   ```json
+   [
+     { "address": "WALLET_ADDRESS", "name": "My label", "groups": ["early"], "emoji": "💚" }
+   ]
+   ```
+   - `address` (required): the Solana wallet address
+   - `name` (optional): your own label
+   - `groups` (optional): role labels — `early`, `Whale`, `Dev`, `Rug/Kol`.
+     Role weights: `early` 2, `Whale` 3, `Dev` −1, `Rug/Kol` −2; wallets
+     without a group fall back to `DEFAULT` (weight 1)
+   - `emoji` (optional): conviction modifier — `🚫` = −10, `🚩` = −5,
+     `💚` = +2, `⭐` = +5. Stacks with the role weight
+     (e.g. `Dev` + `🚫` = −11)
+
+With fewer than 3 matching wallets for a token, the conviction adjustment is
+skipped honestly (`INSUFFICIENT_DATA`) instead of being treated as zero.
 
 ## Rate limits & honesty
 

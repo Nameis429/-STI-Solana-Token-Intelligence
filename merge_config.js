@@ -62,7 +62,7 @@ for (const [k, v] of Object.entries({ star: 5, priority: 2, flag: -5, blocked: -
 // database_conviction (wallet conviction adjustments)
 ensure(c, 'database_conviction', {
   min_matched_wallets: 3,
-  db_total_wallets: 1143,
+  db_total_wallets: 0, // 0 until the user adds their own wallets (synced below)
   sell_cluster_window_seconds: 3600,
   fast_exit_hours: 72,
   conviction_scale: 50,
@@ -72,6 +72,15 @@ ensure(c, 'database_conviction', {
   creator_activity: { bundler_overlap_weight: 10 },
   token_control: { dev_concentration_weight: 8 },
 }, 'database_conviction');
+// Wallet database: the curated list is personal, so only a format example
+// ships with the repo. Create an empty database file when missing so Phase 7
+// runs (0 matches -> INSUFFICIENT_DATA, honestly). Add wallets manually —
+// see README ("Wallet database") and Data/database-wallet.example.json.
+const DB_FILE = path.join(__dirname, 'Data', 'database-wallet.json');
+if (!fs.existsSync(DB_FILE)) {
+  fs.writeFileSync(DB_FILE, '[]\n', 'utf8');
+  added.push('Data/database-wallet.json (empty — add your wallets manually)');
+}
 // Keep db_total_wallets in sync with the actual Data/database-wallet.json count
 // (penyebut penetrasi harus jujur mengikuti ukuran DB).
 try {

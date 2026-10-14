@@ -159,7 +159,7 @@
   },
   "database_conviction": {
     "min_matched_wallets": 3,
-    "db_total_wallets": 1143,
+    "db_total_wallets": 0,
     "sell_cluster_window_seconds": 3600,
     "fast_exit_hours": 72,
     "conviction_scale": 50,

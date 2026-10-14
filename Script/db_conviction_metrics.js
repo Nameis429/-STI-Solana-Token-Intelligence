@@ -24,7 +24,7 @@ const path = require('path');
 
 const DEFAULTS = {
   min_matched_wallets: 3,
-  db_total_wallets: 1143, // total wallets in the bundled database
+  db_total_wallets: 0, // 0 until the user adds their own wallets (synced by merge_config.js)
   sell_cluster_window_seconds: 3600,
   fast_exit_hours: 72,
   conviction_scale: 50,
@@ -137,7 +137,7 @@ function computeDbConviction({ matches, wallets, p5, config } = {}) {
   const penetration = {
     matched,
     db_total_wallets: cfg.db_total_wallets,
-    share_of_db: round2(matched / cfg.db_total_wallets),
+    share_of_db: cfg.db_total_wallets > 0 ? round2(matched / cfg.db_total_wallets) : null,
   };
 
   const known = list.filter(w => w.is_holder !== null);
